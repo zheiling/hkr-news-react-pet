@@ -20,21 +20,27 @@ class App extends Component {
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
+    this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
 
   }
 
   componentDidMount() {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopStories(searchTerm);
+  }
 
+  setSearchTopStories(result) {
+      this.setState({ result });
+  }
+
+
+  fetchSearchTopStories () {
     const { searchTerm } = this.state;
     fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
     .then(response => response.json())
     .then(result => this.setSearchTopStories(result))
     .catch(error => error);
-
-  }
-
-  setSearchTopStories(result) {
-      this.setState({ result });
   }
 
   onDismiss(id) {
@@ -50,27 +56,34 @@ class App extends Component {
      this.setState({ searchTerm : event.target.value })
   }
 
+  onSearchSubmit(event) {
+    const { searchTerm } = this.state;
+    this.fetchSearchTopStories(searchTerm);
+    event.preventDefault();
+  }
+
   render() {
     const { searchTerm, result} = this.state;
     
     return (
       <div className="App">
-        <h1 className="uk-heading-small uk-text-center">Books List</h1>
-        <div className="uk-container uk-container-small">
-          <Search 
-            value={searchTerm}
-            onChange={this.onSearchChange}
-            placeholder="Поиск..."
-            ukIcon="icon: search"
-          >
-          </Search>
-          { result &&
-            <Table 
-              list={result.hits}
-              pattern={searchTerm}
-              onDismiss={this.onDismiss}
-            /> 
-          }
+        <div className="uk-container">
+          <h1 className="uk-heading-small uk-text-center">Hacker News</h1>
+          <div className="control-panel">
+            <Search 
+              value={searchTerm}
+              onChange={this.onSearchChange}
+              onSubmit={this.onSearchSubmit}
+              placeholder="Поиск..."
+            >
+            </Search>
+          </div>
+            { result &&
+              <Table 
+                list={result.hits}
+                onDismiss={this.onDismiss}
+              /> 
+            }
         </div>
       </div>
     );
@@ -83,23 +96,28 @@ const Button = ({ onClick, className ='', children}) => (
     </button>
 );
 
-const Search = ({ value, onChange, children, placeholder, ukIcon}) => (
-    <form className="uk-form-horizontal">
-      {children}
-      <div className="uk-inline">
-          <span class="uk-form-icon" uk-icon={ukIcon}></span>
-          <input
-            type="text"
-            className="uk-input"
-            placeholder={placeholder}
-            value={value}
-            onChange={onChange}
-          />
-      </div>
-    </form> 
+const Search = ({ 
+  value,
+  onChange,
+  children,
+  placeholder,
+  onSubmit
+}) => (
+    <form className="uk-search uk-search-large" onSubmit={onSubmit}>
+        <button type="submit" uk-search-icon=""></button>
+        <input
+          type="search"
+          className="uk-search-input"
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+        />
+    {children}
+    </form>       
+
   );
 
-const Table = ({list, pattern, onDismiss}) => (
+const Table = ({list, onDismiss}) => (
       <table class="uk-table uk-table-hover uk-table-divider">
         <thead>
             <tr>
@@ -107,11 +125,12 @@ const Table = ({list, pattern, onDismiss}) => (
                 <th>Author</th>
                 <th>Number of Comments</th>
                 <th>Points</th>
+                <th>Created date</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-        { list.filter(isSearched(pattern)).map(item =>
+        { list.map(item =>
           <tr key={item.objectID}>
             <td>
               <a href={item.url}>{item.title}</a>
@@ -119,6 +138,7 @@ const Table = ({list, pattern, onDismiss}) => (
             <td>{item.author}</td>
             <td>{item.num_comments}</td>
             <td>{item.points}</td>
+            <td>{item.created_at}</td>
             <td>
               <Button
                 onClick={() => onDismiss(item.objectID)}
@@ -131,11 +151,5 @@ const Table = ({list, pattern, onDismiss}) => (
         </tbody>
       </table>
 );
-
-function isSearched(searchTerm) {
-  return function (item) {
-    return item.title.toLowerCase().includes(searchTerm.toLowerCase());
-  }
-}
 
 export default App;
