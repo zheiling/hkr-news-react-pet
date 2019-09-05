@@ -3,10 +3,14 @@ import "./App.css";
 // import UIkit from 'uikit';
 // import Icons from 'uikit/dist/js/uikit-icons';
 
-const DEFAULT_QUERY = 'redux';
-const PATH_BASE = 'https://hn.algolia.com/api/v1';
-const PATH_SEARCH = '/search';
-const PARAM_SEARCH = 'query=';
+const DEFAULT_QUERY = 'redux',
+      DEFAULT_HPP = '20',
+
+      PATH_BASE = 'https://hn.algolia.com/api/v1',
+      PATH_SEARCH = '/search',
+      PARAM_SEARCH = 'query=',
+      PARAM_PAGE = 'page=',
+      PARAM_HPP = 'hitsPerPage='
 
 class App extends Component {
   constructor(props) {
@@ -31,13 +35,22 @@ class App extends Component {
   }
 
   setSearchTopStories(result) {
-      this.setState({ result });
+    const { hits, page } = result;
+    const oldHits = page !==0 
+            ? this.state.result.hits
+            : [];
+    const updatedHits = [
+              ...oldHits,
+              ...hits
+          ];
+
+    this.setState({ 
+      result: { hits: updatedHits, page }
+     });
   }
 
-
-  fetchSearchTopStories () {
-    const { searchTerm } = this.state;
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+  fetchSearchTopStories (searchTerm, page = 0) {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
     .then(response => response.json())
     .then(result => this.setSearchTopStories(result))
     .catch(error => error);
@@ -63,7 +76,8 @@ class App extends Component {
   }
 
   render() {
-    const { searchTerm, result} = this.state;
+    const { searchTerm, result} = this.state,
+          page = (result && result.page) || 0;
     
     return (
       <div className="App">
@@ -84,6 +98,11 @@ class App extends Component {
                 onDismiss={this.onDismiss}
               /> 
             }
+          <div className="interactions">
+            <Button className="uk-margin-bottom uk-button-primary" onClick={() => {this.fetchSearchTopStories(searchTerm, page + 1)}} >
+              More
+            </Button>
+          </div>
         </div>
       </div>
     );
