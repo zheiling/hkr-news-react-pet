@@ -10,17 +10,19 @@ const DEFAULT_QUERY = 'redux',
       PATH_SEARCH = '/search',
       PARAM_SEARCH = 'query=',
       PARAM_PAGE = 'page=',
-      PARAM_HPP = 'hitsPerPage='
+      PARAM_HPP = 'hitsPerPage=';
 
 class App extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      result: null,
+      results: null,
+      searchKey: '',
       searchTerm: DEFAULT_QUERY,
     };
 
+    this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
@@ -31,13 +33,15 @@ class App extends Component {
 
   componentDidMount() {
     const { searchTerm } = this.state;
+    this.setState({searchKey: searchTerm});
     this.fetchSearchTopStories(searchTerm);
   }
 
   setSearchTopStories(result) {
     const { hits, page } = result;
-    const oldHits = page !==0 
-            ? this.state.result.hits
+    const { searchKey, results } = this.state;
+    const oldHits = results && results[searchKey] 
+            ? results[searchKey]['hits']
             : [];
     const updatedHits = [
               ...oldHits,
@@ -45,7 +49,11 @@ class App extends Component {
           ];
 
     this.setState({ 
-      result: { hits: updatedHits, page }
+      results: 
+      { 
+        ...results,
+        [searchKey]: { hits: updatedHits, page } 
+      }
      });
   }
 
@@ -56,12 +64,21 @@ class App extends Component {
     .catch(error => error);
   }
 
+  needsToSearchTopStories(searchTerm) {
+    return !this.state.results[searchTerm];
+  }
+
   onDismiss(id) {
-    const isNotId = item => item.objectID !== id,
-          updatedHits = this.state.result.hits.filter(isNotId);
+    const { searchKey, results } = this.state;
+    const { hits, page } = results[searchKey];
+    const isNotId = item => item.objectID !== id;
+    const updatedHits = hits.filter(isNotId);
 
     this.setState({ 
-        result : { ...this.state.result, hits: updatedHits }
+      results : {
+        ...results,
+        [searchKey] : { hits: updatedHits, page }
+      }
      });
    }
 
@@ -71,13 +88,31 @@ class App extends Component {
 
   onSearchSubmit(event) {
     const { searchTerm } = this.state;
-    this.fetchSearchTopStories(searchTerm);
+    this.setState({ searchKey: searchTerm });
+    if (this.needsToSearchTopStories(searchTerm)) {
+      this.fetchSearchTopStories(searchTerm);
+    }
     event.preventDefault();
   }
 
   render() {
-    const { searchTerm, result} = this.state,
-          page = (result && result.page) || 0;
+    const { 
+            searchTerm, 
+            results,
+            searchKey
+    } = this.state;
+
+    const page = (
+      results && 
+      results[searchKey] &&
+      results['page']
+    ) || 0;
+
+    const list = (
+      results &&
+      results[searchKey] &&
+      results[searchKey]['hits']
+    ) || [];
     
     return (
       <div className="App">
@@ -92,14 +127,20 @@ class App extends Component {
             >
             </Search>
           </div>
-            { result &&
-              <Table 
-                list={result.hits}
+            { results && results[searchKey] && results[searchKey]['hits'].length > 0
+              ? <Table 
+                list={list}
                 onDismiss={this.onDismiss}
-              /> 
+              />
+              : <Alert>
+                  There is no info to display.
+                </Alert>
             }
           <div className="interactions">
-            <Button className="uk-margin-bottom uk-button-primary" onClick={() => {this.fetchSearchTopStories(searchTerm, page + 1)}} >
+            <Button 
+              className="uk-margin-bottom uk-button-primary" 
+              onClick={() => this.fetchSearchTopStories(searchKey, page + 1)} 
+            >
               More
             </Button>
           </div>
@@ -169,6 +210,10 @@ const Table = ({list, onDismiss}) => (
         )}
         </tbody>
       </table>
+);
+
+const Alert = ({children}) => (
+  <div uk-alert=""className="uk-text-center">{ children }</div>
 );
 
 export default App;
