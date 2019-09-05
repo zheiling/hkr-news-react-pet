@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./App.css";
+import axios from 'axios';
 // import UIkit from 'uikit';
 // import Icons from 'uikit/dist/js/uikit-icons';
 
@@ -20,6 +21,7 @@ class App extends Component {
       results: null,
       searchKey: '',
       searchTerm: DEFAULT_QUERY,
+      error: null,
     };
 
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
@@ -58,10 +60,9 @@ class App extends Component {
   }
 
   fetchSearchTopStories (searchTerm, page = 0) {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
-    .then(response => response.json())
-    .then(result => this.setSearchTopStories(result))
-    .catch(error => error);
+    axios.get(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
+    .then(result => this.setSearchTopStories(result.data))
+    .catch(error => this.setState({ error }));
   }
 
   needsToSearchTopStories(searchTerm) {
@@ -99,7 +100,8 @@ class App extends Component {
     const { 
             searchTerm, 
             results,
-            searchKey
+            searchKey,
+            error
     } = this.state;
 
     const page = (
@@ -115,8 +117,8 @@ class App extends Component {
     ) || [];
     
     return (
-      <div className="App">
-        <div className="uk-container">
+      <div className="App uk-background-muted">
+        <div className="uk-container uk-background-default">
           <h1 className="uk-heading-small uk-text-center">Hacker News</h1>
           <div className="control-panel">
             <Search 
@@ -127,18 +129,22 @@ class App extends Component {
             >
             </Search>
           </div>
-            { results && results[searchKey] && results[searchKey]['hits'].length > 0
-              ? <Table 
-                list={list}
-                onDismiss={this.onDismiss}
-              />
-              : <Alert>
-                  There is no info to display.
-                </Alert>
-            }
+           { error
+              ? <Alert className="uk-alert-danger">
+                Something has gone wrong...
+              </Alert>
+              : results && results[searchKey] && results[searchKey]['hits'].length > 0
+                  ? <Table 
+                    list={list}
+                    onDismiss={this.onDismiss}
+                  />
+                  : <Alert className="uk-text-center">
+                      There is no info to display.
+                    </Alert>
+          }
           <div className="interactions">
             <Button 
-              className="uk-margin-bottom uk-button-primary" 
+              className="uk-margin-bottom uk-width-1-1" 
               onClick={() => this.fetchSearchTopStories(searchKey, page + 1)} 
             >
               More
@@ -150,7 +156,7 @@ class App extends Component {
   }
 }
 
-const Button = ({ onClick, className ='', children}) => (
+const Button = ({ onClick, className ='uk-button', children}) => (
     <button onClick={onClick} className={className} type="button">
       {children}
     </button>
@@ -178,7 +184,7 @@ const Search = ({
   );
 
 const Table = ({list, onDismiss}) => (
-      <table class="uk-table uk-table-hover uk-table-divider">
+      <table className="uk-table uk-table-hover uk-table-divider">
         <thead>
             <tr>
                 <th>Title</th>
@@ -212,8 +218,13 @@ const Table = ({list, onDismiss}) => (
       </table>
 );
 
-const Alert = ({children}) => (
-  <div uk-alert=""className="uk-text-center">{ children }</div>
+const Alert = ({children, className=""}) => (
+  <div 
+    uk-alert="" 
+    className={`${className} uk-alert`}
+  >
+    { children }
+  </div>
 );
 
 export default App;
