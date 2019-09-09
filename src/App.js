@@ -14,6 +14,8 @@ const DEFAULT_QUERY = 'redux',
       PARAM_HPP = 'hitsPerPage=';
 
 class App extends Component {
+  _isMounted = false;
+
   constructor(props) {
     super(props);
 
@@ -34,9 +36,14 @@ class App extends Component {
   }
 
   componentDidMount() {
+    this._isMounted = true;
     const { searchTerm } = this.state;
     this.setState({searchKey: searchTerm});
     this.fetchSearchTopStories(searchTerm);
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   setSearchTopStories(result) {
@@ -50,13 +57,16 @@ class App extends Component {
               ...hits
           ];
 
-    this.setState({ 
-      results: 
-      { 
-        ...results,
-        [searchKey]: { hits: updatedHits, page } 
-      }
-     });
+    if (this._isMounted) {
+      this.setState({ 
+        results: 
+        { 
+          ...results,
+          [searchKey]: { hits: updatedHits, page } 
+        }
+        });
+    }
+
   }
 
   fetchSearchTopStories (searchTerm, page = 0) {
@@ -228,3 +238,9 @@ const Alert = ({children, className=""}) => (
 );
 
 export default App;
+
+export {
+  Button,
+  Search,
+  Table,
+};
