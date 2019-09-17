@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "./App.css";
+import PropTypes from 'prop-types';
 import axios from 'axios';
 // import UIkit from 'uikit';
 // import Icons from 'uikit/dist/js/uikit-icons';
@@ -24,6 +25,7 @@ class App extends Component {
       searchKey: '',
       searchTerm: DEFAULT_QUERY,
       error: null,
+      isLoading: false,
     };
 
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
@@ -63,13 +65,17 @@ class App extends Component {
         { 
           ...results,
           [searchKey]: { hits: updatedHits, page } 
-        }
-        });
+        },
+        isLoading: false,
+      });
     }
 
   }
 
   fetchSearchTopStories (searchTerm, page = 0) {
+
+    this.setState({ isLoading: true });
+
     axios.get(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
     .then(result => this.setSearchTopStories(result.data))
     .catch(error => this.setState({ error }));
@@ -111,7 +117,8 @@ class App extends Component {
             searchTerm, 
             results,
             searchKey,
-            error
+            error,
+            isLoading
     } = this.state;
 
     const page = (
@@ -136,6 +143,7 @@ class App extends Component {
               onChange={this.onSearchChange}
               onSubmit={this.onSearchSubmit}
               placeholder="Поиск..."
+              isLoading={isLoading}
             >
             </Search>
           </div>
@@ -153,12 +161,17 @@ class App extends Component {
                     </Alert>
           }
           <div className="interactions">
-            <Button 
+            {
+              isLoading
+              ? <Loading />
+              : <Button 
               className="uk-margin-bottom uk-width-1-1" 
               onClick={() => this.fetchSearchTopStories(searchKey, page + 1)} 
-            >
-              More
-            </Button>
+              >
+                More
+              </Button>
+              
+            }
           </div>
         </div>
       </div>
@@ -166,32 +179,78 @@ class App extends Component {
   }
 }
 
-const Button = ({ onClick, className ='uk-button', children}) => (
+const Button = ({ 
+  onClick, 
+  className,
+  children,
+}) => (
     <button onClick={onClick} className={className} type="button">
       {children}
     </button>
 );
 
-const Search = ({ 
-  value,
-  onChange,
-  children,
-  placeholder,
-  onSubmit
-}) => (
-    <form className="uk-search uk-search-large" onSubmit={onSubmit}>
-        <button type="submit" uk-search-icon=""></button>
-        <input
-          type="search"
-          className="uk-search-input"
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-        />
-    {children}
-    </form>       
+Button.defaultProps = {
+  className : 'uk-button',
+}
 
-  );
+Button.propTypes = {
+  onClick: PropTypes.func.isRequired,
+  className: PropTypes.string,
+  children: PropTypes.node.isRequired,
+};
+
+
+class Search extends Component {
+
+  componentDidMount () {
+    if (this.input) {
+      this.input.focus();
+    }
+  }
+
+  render () {
+    const {
+      value,
+      onChange,
+      children,
+      placeholder,
+      onSubmit,
+      isLoading
+    } = this.props;
+
+    return (
+
+      <form className="uk-search uk-search-large" onSubmit={onSubmit}>
+          { isLoading
+            ? <button type="submit"><span uk-icon="icon: clock; ratio: 2"></span></button>
+            : <button type="submit" uk-search-icon=""></button>
+          }
+          <input
+            type="search"
+            className="uk-search-input"
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            ref={el => this.input = el}
+          />
+      {children}
+      </form>     
+    );  
+  }
+}
+
+Search.defaultProps = {
+  value: '',
+  placeholder: "Search...",
+}
+
+Search.propTypes = {
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+  children: PropTypes.node,
+  placeholder: PropTypes.string,
+  onSubmit: PropTypes.func.isRequired,
+}
 
 const Table = ({list, onDismiss}) => (
       <table className="uk-table uk-table-hover uk-table-divider">
@@ -228,6 +287,19 @@ const Table = ({list, onDismiss}) => (
       </table>
 );
 
+Table.propTypes = {
+  list: PropTypes.arrayOf(
+    PropTypes.shape({
+      objectID: PropTypes.string.isRequired,
+      author: PropTypes.string,
+      url: PropTypes.string,
+      num_comments: PropTypes.number,
+      points: PropTypes.number,
+    })
+    ).isRequired,
+    onDismiss: PropTypes.func.isRequired,
+};
+
 const Alert = ({children, className=""}) => (
   <div 
     uk-alert="" 
@@ -236,6 +308,9 @@ const Alert = ({children, className=""}) => (
     { children }
   </div>
 );
+
+const Loading = () =>
+ <div>Loading ...</div>
 
 export default App;
 

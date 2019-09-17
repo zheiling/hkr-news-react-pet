@@ -1,0 +1,160 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`App has a valid snapshot 1`] = `
+<div
+  className="App uk-background-muted"
+>
+  <div
+    className="uk-container uk-background-default"
+  >
+    <h1
+      className="uk-heading-small uk-text-center"
+    >
+      Hacker News
+    </h1>
+    <div
+      className="control-panel"
+    >
+      <form
+        className="uk-search uk-search-large"
+        onSubmit={[Function]}
+      >
+        <button
+          type="submit"
+          uk-search-icon=""
+        />
+        <input
+          className="uk-search-input"
+          onChange={[Function]}
+          placeholder="Поиск..."
+          type="search"
+          value="redux"
+        />
+      </form>
+    </div>
+    <div
+      className="uk-text-center uk-alert"
+      uk-alert=""
+    >
+      There is no info to display.
+    </div>
+    <div
+      className="interactions"
+    >
+      <button
+        className="uk-margin-bottom uk-width-1-1"
+        onClick={[Function]}
+        type="button"
+      >
+        More
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Button has a valid snapshot 1`] = `
+<button
+  className="uk-button"
+  type="button"
+>
+  Give Me More
+</button>
+`;
+
+exports[`Search has a valid snapshot 1`] = `
+<form
+  className="uk-search uk-search-large"
+>
+  <button
+    type="submit"
+    uk-search-icon=""
+  />
+  <input
+    className="uk-search-input"
+    type="search"
+  />
+  Search
+</form>
+`;
+
+exports[`Table has a valid snapshot 1`] = `
+<table
+  className="uk-table uk-table-hover uk-table-divider"
+>
+  <thead>
+    <tr>
+      <th>
+        Title
+      </th>
+      <th>
+        Author
+      </th>
+      <th>
+        Number of Comments
+      </th>
+      <th>
+        Points
+      </th>
+      <th>
+        Created date
+      </th>
+      <th />
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <a>
+          1
+        </a>
+      </td>
+      <td>
+        1
+      </td>
+      <td>
+        1
+      </td>
+      <td>
+        2
+      </td>
+      <td />
+      <td>
+        <button
+          className="uk-button"
+          onClick={[Function]}
+          type="button"
+        >
+          Dismiss
+        </button>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a>
+          2
+        </a>
+      </td>
+      <td>
+        2
+      </td>
+      <td>
+        1
+      </td>
+      <td>
+        2
+      </td>
+      <td />
+      <td>
+        <button
+          className="uk-button"
+          onClick={[Function]}
+          type="button"
+        >
+          Dismiss
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
